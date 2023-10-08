@@ -22,10 +22,10 @@ btnCreateTodo.addEventListener("click", (event) => {
       return response.json();
     })
     .then((data) => {
-      console.log(data);
       addTodos(data);
     });
 });
+
 fetch("https://jsonplaceholder.typicode.com/users")
   .then((response) => {
     return response.json();
@@ -39,7 +39,6 @@ fetch("https://jsonplaceholder.typicode.com/users")
   .catch((error) => {
     console.error(error);
   });
-
 fetch("https://jsonplaceholder.typicode.com/todos")
   .then((response) => {
     return response.json();
@@ -52,7 +51,9 @@ fetch("https://jsonplaceholder.typicode.com/todos")
   .catch((error) => {
     console.error(error);
   });
-
+function removeTodo(rootElement) {
+  rootElement.style.display = "none";
+}
 function addTodos(todo) {
   const newTodo = document.createElement("li");
 
@@ -65,10 +66,35 @@ function addTodos(todo) {
 
   const btnDelete = document.createElement("button");
   btnDelete.textContent = "X";
+  btnDelete.addEventListener("click", (event) => {
+    fetch(`https://jsonplaceholder.typicode.com/todos/${todo.id}`, {
+      method: "DELETE",
+    }).then((response) => {
+      if (response.status === 200) {
+        removeTodo(event.target.parentElement);
+      }
+    });
+  });
 
   const inputCheckBox = document.createElement("input");
   inputCheckBox.type = "checkbox";
   inputCheckBox.checked = todo.completed;
+  inputCheckBox.addEventListener("click", (event) => {
+    const updateTodo = {
+      completed: event.target.checked,
+    };
+    fetch(`https://jsonplaceholder.typicode.com/todos/${todo.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updateTodo),
+    }).then((response) => {
+      if (response.status === 200) {
+        return response.json();
+      }
+    });
+  });
 
   newTodo.appendChild(inputCheckBox);
   newTodo.appendChild(text);
