@@ -25,34 +25,37 @@ btnCreateTodo.addEventListener("click", (event) => {
       addTodos(data);
     });
 });
-
-fetch("https://jsonplaceholder.typicode.com/users")
-  .then((response) => {
-    return response.json();
-  })
-  .then((data) => {
-    data.forEach((el) => {
-      usersAPI.push(el.name);
+function fetchUsers() {
+  fetch("https://jsonplaceholder.typicode.com/users")
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      data.forEach((el) => {
+        usersAPI.push(el.name);
+      });
+      addUsersSelect(data);
+    })
+    .catch((error) => {
+      console.error(error);
     });
-    addUsersSelect(data);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-fetch("https://jsonplaceholder.typicode.com/todos")
-  .then((response) => {
-    return response.json();
-  })
-  .then((data) => {
-    data.forEach((element) => {
-      addTodos(element);
+}
+function fetchTodos() {
+  fetch("https://jsonplaceholder.typicode.com/todos")
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      data.forEach((element) => {
+        addTodos(element);
+      });
+    })
+    .catch((error) => {
+      console.error(error);
     });
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+}
 function removeTodo(rootElement) {
-  rootElement.style.display = "none";
+  rootElement.remove();
 }
 function addTodos(todo) {
   const newTodo = document.createElement("li");
@@ -110,3 +113,5 @@ function addUsersSelect(users) {
     select.appendChild(option);
   });
 }
+fetchUsers();
+fetchTodos();
