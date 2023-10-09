@@ -6,8 +6,12 @@ const todoList = document.getElementById("todo-list");
 
 btnCreateTodo.addEventListener("click", (event) => {
   event.preventDefault();
+  if (!inputCreateTodo.value.length || select.value === "select user") {
+    alert("Заполнены не все поля");
+    return;
+  }
   const newTodo = {
-    userId: +select.value,
+    userId: select.value,
     title: inputCreateTodo.value,
     completed: false,
   };
