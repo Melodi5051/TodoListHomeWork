@@ -52,7 +52,7 @@ async function fetchUsers() {
     });
     console.log("Данные пользователей обновлены.");
   } catch (error) {
-    console.error("Ошибка при получении списка пользователей: ", error);
+    alert(`Ошибка при получении списка пользователей: ${error}`);
   }
 }
 
@@ -65,7 +65,7 @@ async function fetchTodos() {
     console.log("Данные задач обновлены.");
     displayTodos();
   } catch (error) {
-    console.error("Ошибка при получении списка задач: ", error);
+    alert(`Ошибка при получении списка задач: ${error}`);
   }
 }
 
@@ -84,7 +84,7 @@ async function updateTodoStatus(event) {
       },
     });
   } catch (error) {
-    console.error("Ошибка при обновлении состояния задачи: ", error);
+    alert(`Ошибка при обновление задачи: ${error}`);
     checkbox.checked = !checkbox.checked;
   }
 }
@@ -102,7 +102,7 @@ async function deleteTodo(event) {
       displayTodos();
     }
   } catch (error) {
-    console.error("Ошибка при удалении задачи: ", error);
+    alert(`Ошибка при удаление задачи: ${error}`);
   }
 }
 
@@ -187,7 +187,7 @@ async function createTodo() {
       alert("Ошибка при создании задачи.");
     }
   } catch (error) {
-    console.error("Ошибка при создании задачи: ", error);
+    alert(`Ошибка при создании задачи: ${error}`);
   }
 }
 
