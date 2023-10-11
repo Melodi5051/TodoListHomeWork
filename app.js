@@ -1,121 +1,196 @@
-let usersAPI = [];
 const select = document.getElementById("user-todo");
 const btnCreateTodo = document.getElementById("btn-add-todo");
 const inputCreateTodo = document.getElementById("new-todo");
-const todoList = document.getElementById("todo-list");
+const prevPageButton = document.getElementById("prev-page");
+const nextPageButton = document.getElementById("next-page");
+const currentPageDisplay = document.getElementById("currentPage");
+const usersData = [];
+const todosData = [];
+let currentPage = 1;
+const tasksPerPage = 10;
 
 btnCreateTodo.addEventListener("click", (event) => {
   event.preventDefault();
-  if (!inputCreateTodo.value.length || select.value === "select user") {
-    alert("Заполнены не все поля");
+  createTodo();
+});
+
+document.addEventListener("keydown", (event) => {
+  const maxPage = Math.ceil(todosData.length / tasksPerPage);
+  if (event.code === "ArrowRight" && currentPage < maxPage) {
+    currentPage++;
+    displayTodos();
+  } else if (event.code === "ArrowLeft" && currentPage > 1) {
+    currentPage--;
+    displayTodos();
+  }
+});
+prevPageButton.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    displayTodos();
+  }
+});
+nextPageButton.addEventListener("click", () => {
+  const maxPage = Math.ceil(todosData.length / tasksPerPage);
+  if (currentPage < maxPage) {
+    currentPage++;
+    displayTodos();
+  }
+});
+
+async function fetchUsers() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/users");
+    const newUsers = await response.json();
+    usersData.length = 0;
+    usersData.push(...newUsers);
+    usersData.forEach((item) => {
+      const newUser = document.createElement("option");
+      newUser.textContent = item.name;
+      newUser.value = item.id;
+      select.appendChild(newUser);
+    });
+    console.log("Данные пользователей обновлены.");
+  } catch (error) {
+    console.error("Ошибка при получении списка пользователей: ", error);
+  }
+}
+
+async function fetchTodos() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos");
+    const newTodos = await response.json();
+    todosData.length = 0;
+    todosData.push(...newTodos);
+    console.log("Данные задач обновлены.");
+    displayTodos();
+  } catch (error) {
+    console.error("Ошибка при получении списка задач: ", error);
+  }
+}
+
+async function updateTodoStatus(event) {
+  const todoId = event.target.getAttribute("data-id");
+  const checkbox = event.target;
+
+  try {
+    await fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        completed: checkbox.checked,
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    });
+  } catch (error) {
+    console.error("Ошибка при обновлении состояния задачи: ", error);
+    checkbox.checked = !checkbox.checked;
+  }
+}
+
+async function deleteTodo(event) {
+  const todoId = event.target.getAttribute("data-id");
+  try {
+    await fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
+      method: "DELETE",
+    });
+
+    const index = todosData.findIndex((todo) => todo.id.toString() === todoId);
+    if (index !== -1) {
+      todosData.splice(index, 1);
+      displayTodos();
+    }
+  } catch (error) {
+    console.error("Ошибка при удалении задачи: ", error);
+  }
+}
+
+function createTodoElement(todo) {
+  const listItem = document.createElement("li");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = todo.completed;
+  checkbox.setAttribute("data-id", todo.id);
+  checkbox.addEventListener("change", updateTodoStatus);
+
+  const titleSpan = document.createElement("span");
+  titleSpan.textContent = todo.title;
+
+  listItem.appendChild(checkbox);
+  listItem.appendChild(titleSpan);
+  return listItem;
+}
+
+function displayTodos() {
+  const todoList = document.getElementById("todo-list");
+  todoList.innerHTML = "";
+
+  const startIndex = (currentPage - 1) * tasksPerPage;
+  const endIndex = startIndex + tasksPerPage;
+  const currentTodos = todosData.slice(startIndex, endIndex);
+
+  currentTodos.forEach((todo) => {
+    const user = usersData.find((user) => +user.id === +todo.userId);
+    const listItem = createTodoElement(todo);
+    listItem.innerHTML = `
+          <input type="checkbox" ${todo.completed ? "checked" : ""} data-id="${
+      todo.id
+    }"/>
+          <span>${todo.title}</span>
+          <span class="user-name"> <strong> ${
+            user ? user.name : "Unknown User"
+          } </strong></span>
+          <button class="delete-todo" data-id="${todo.id}">Х</button>
+        `;
+
+    const checkbox = listItem.querySelector("input[type='checkbox']");
+    checkbox.addEventListener("change", updateTodoStatus);
+
+    todoList.appendChild(listItem);
+  });
+  currentPageDisplay.innerHTML = `${currentPage}`;
+  const deleteButtons = document.querySelectorAll(".delete-todo");
+  deleteButtons.forEach((button) => {
+    button.addEventListener("click", deleteTodo);
+  });
+}
+
+async function createTodo() {
+  const selectedUserId = select.value;
+  const newTodoTitle = inputCreateTodo.value;
+
+  if (!selectedUserId || !newTodoTitle) {
+    alert("Пожалуйста, выберите пользователя и введите заголовок задачи.");
     return;
   }
-  const newTodo = {
-    userId: select.value,
-    title: inputCreateTodo.value,
-    completed: false,
-  };
-  fetch("https://jsonplaceholder.typicode.com/todos", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(newTodo),
-  })
-    .then((response) => {
-      return response.json();
-    })
-    .then((data) => {
-      addTodos(data);
-    });
-});
-function fetchUsers() {
-  fetch("https://jsonplaceholder.typicode.com/users")
-    .then((response) => {
-      return response.json();
-    })
-    .then((data) => {
-      data.forEach((el) => {
-        usersAPI.push(el.name);
-      });
-      addUsersSelect(data);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-}
-function fetchTodos() {
-  fetch("https://jsonplaceholder.typicode.com/todos")
-    .then((response) => {
-      return response.json();
-    })
-    .then((data) => {
-      data.forEach((element) => {
-        addTodos(element);
-      });
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-}
-function removeTodo(rootElement) {
-  rootElement.remove();
-}
-function addTodos(todo) {
-  const newTodo = document.createElement("li");
 
-  const text = document.createElement("p");
-  text.textContent = todo.title;
-
-  const nameUser = document.createElement("strong");
-  nameUser.textContent = ` ${usersAPI[todo.userId - 1] ?? "Artem Natochin"}`;
-  text.appendChild(nameUser);
-
-  const btnDelete = document.createElement("button");
-  btnDelete.textContent = "X";
-  btnDelete.addEventListener("click", (event) => {
-    fetch(`https://jsonplaceholder.typicode.com/todos/${todo.id}`, {
-      method: "DELETE",
-    }).then((response) => {
-      if (response.status === 200) {
-        removeTodo(event.target.parentElement);
-      }
-    });
-  });
-
-  const inputCheckBox = document.createElement("input");
-  inputCheckBox.type = "checkbox";
-  inputCheckBox.checked = todo.completed;
-  inputCheckBox.addEventListener("click", (event) => {
-    const updateTodo = {
-      completed: event.target.checked,
-    };
-    fetch(`https://jsonplaceholder.typicode.com/todos/${todo.id}`, {
-      method: "PATCH",
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: selectedUserId,
+        title: newTodoTitle,
+        completed: false,
+      }),
       headers: {
-        "Content-Type": "application/json",
+        "Content-type": "application/json; charset=UTF-8",
       },
-      body: JSON.stringify(updateTodo),
-    }).then((response) => {
-      if (response.status === 200) {
-        return response.json();
-      }
     });
-  });
 
-  newTodo.appendChild(inputCheckBox);
-  newTodo.appendChild(text);
-  newTodo.appendChild(btnDelete);
-  todoList.appendChild(newTodo);
+    if (response.status === 201) {
+      const newTodo = await response.json();
+      todosData.push(newTodo);
+      displayTodos();
+      inputCreateTodo.value = "";
+    } else {
+      alert("Ошибка при создании задачи.");
+    }
+  } catch (error) {
+    console.error("Ошибка при создании задачи: ", error);
+  }
 }
 
-function addUsersSelect(users) {
-  users.forEach((element) => {
-    const option = document.createElement("option");
-    option.value = element.id;
-    option.textContent = element.name;
-    select.appendChild(option);
-  });
-}
-fetchUsers();
-fetchTodos();
+fetchUsers().then(() => {
+  fetchTodos();
+});

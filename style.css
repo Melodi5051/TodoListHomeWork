@@ -43,6 +43,9 @@ form > button:hover {
 ul {
     list-style: none;
     width: 500px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
     margin: 2rem auto;
     padding: 0;
     position: relative;
@@ -56,11 +59,8 @@ li button {
     order: 999;
     margin-left: auto;
 }
-footer {
-    display: flex;
-    justify-content: center;
-    flex-direction: row;
-    column-gap: 5px;
+.pagination {
+    text-align: center;
 }
 .todo-item {
     display: flex;
