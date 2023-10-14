@@ -41,16 +41,21 @@ nextPageButton.addEventListener("click", () => {
 async function fetchUsers() {
   try {
     const response = await fetch("https://jsonplaceholder.typicode.com/users");
-    const newUsers = await response.json();
-    usersData.length = 0;
-    usersData.push(...newUsers);
-    usersData.forEach((item) => {
-      const newUser = document.createElement("option");
-      newUser.textContent = item.name;
-      newUser.value = item.id;
-      select.appendChild(newUser);
-    });
-    console.log("Данные пользователей обновлены.");
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
+    } else {
+      const newUsers = await response.json();
+
+      usersData.length = 0;
+      usersData.push(...newUsers);
+      usersData.forEach((item) => {
+        const newUser = document.createElement("option");
+        newUser.textContent = item.name;
+        newUser.value = item.id;
+        select.appendChild(newUser);
+      });
+      console.log("Данные пользователей обновлены.");
+    }
   } catch (error) {
     alert(`Ошибка при получении списка пользователей: ${error}`);
   }
@@ -59,11 +64,15 @@ async function fetchUsers() {
 async function fetchTodos() {
   try {
     const response = await fetch("https://jsonplaceholder.typicode.com/todos");
-    const newTodos = await response.json();
-    todosData.length = 0;
-    todosData.push(...newTodos);
-    console.log("Данные задач обновлены.");
-    displayTodos();
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
+    } else {
+      const newTodos = await response.json();
+      todosData.length = 0;
+      todosData.push(...newTodos);
+      console.log("Данные задач обновлены.");
+      displayTodos();
+    }
   } catch (error) {
     alert(`Ошибка при получении списка задач: ${error}`);
   }
@@ -74,15 +83,21 @@ async function updateTodoStatus(event) {
   const checkbox = event.target;
 
   try {
-    await fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        completed: checkbox.checked,
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-    });
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/todos/${todoId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          completed: checkbox.checked,
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
+    }
   } catch (error) {
     alert(`Ошибка при обновление задачи: ${error}`);
     checkbox.checked = !checkbox.checked;
@@ -92,10 +107,15 @@ async function updateTodoStatus(event) {
 async function deleteTodo(event) {
   const todoId = event.target.getAttribute("data-id");
   try {
-    await fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
-      method: "DELETE",
-    });
-
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/todos/${todoId}`,
+      {
+        method: "DELETE",
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
+    }
     const index = todosData.findIndex((todo) => todo.id.toString() === todoId);
     if (index !== -1) {
       todosData.splice(index, 1);
@@ -177,15 +197,13 @@ async function createTodo() {
         "Content-type": "application/json; charset=UTF-8",
       },
     });
-
-    if (response.status === 201) {
-      const newTodo = await response.json();
-      todosData.push(newTodo);
-      displayTodos();
-      inputCreateTodo.value = "";
-    } else {
-      alert("Ошибка при создании задачи.");
+    if (!response.ok) {
+      throw new Error(`${response.status}`);
     }
+    const newTodo = await response.json();
+    todosData.unshift(newTodo);
+    displayTodos();
+    inputCreateTodo.value = "";
   } catch (error) {
     alert(`Ошибка при создании задачи: ${error}`);
   }
