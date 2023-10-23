@@ -81,14 +81,14 @@ async function fetchTodos() {
 async function updateTodoStatus(event) {
   const todoId = event.target.getAttribute("data-id");
   const checkbox = event.target;
-
+  event.target.checked = !event.target.checked;
   try {
     const response = await fetch(
       `https://jsonplaceholder.typicode.com/todos/${todoId}`,
       {
         method: "PATCH",
         body: JSON.stringify({
-          completed: checkbox.checked,
+          completed: !checkbox.checked,
         }),
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -97,10 +97,15 @@ async function updateTodoStatus(event) {
     );
     if (!response.ok) {
       throw new Error(`${response.status}`);
+    } else {
+      event.target.checked = !event.target.checked;
     }
   } catch (error) {
-    alert(`Ошибка при обновление задачи: ${error}`);
-    checkbox.checked = !checkbox.checked;
+    if (!navigator.onLine) {
+      alert(`Ошибка подключения к интернету`);
+    } else {
+      alert(`Ошибка при обновление задачи: ${error}`);
+    }
   }
 }
 
@@ -122,7 +127,11 @@ async function deleteTodo(event) {
       displayTodos();
     }
   } catch (error) {
-    alert(`Ошибка при удаление задачи: ${error}`);
+    if (!navigator.onLine) {
+      alert(`Ошибка подключения к интернету`);
+    } else {
+      alert(`Ошибка при удаление задачи: ${error}`);
+    }
   }
 }
 
@@ -205,7 +214,11 @@ async function createTodo() {
     displayTodos();
     inputCreateTodo.value = "";
   } catch (error) {
-    alert(`Ошибка при создании задачи: ${error}`);
+    if (!navigator.onLine) {
+      alert(`Ошибка подключения к интернету`);
+    } else {
+      alert(`Ошибка при создании задачи: ${error}`);
+    }
   }
 }
 
